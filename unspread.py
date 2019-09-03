@@ -15,6 +15,7 @@ import os
 import argparse
 
 from pdfrw import PdfReader, PdfWriter, PageMerge
+from slugify import slugify
 
 
 def splitpage(src):
@@ -39,24 +40,27 @@ parser.add_argument("path", help="path of the PDF to unspread")
 args = parser.parse_args()
 if args.only_pages:
   args.only_pages = args.only_pages[0].split(',')
-print args
+# print(args)
 
-inpfn = args.path
-outfn = 'unspread.' + os.path.basename(inpfn)
-writer = PdfWriter(outfn)
+inputFilePath = args.path
+outputFilePath = "f_{}.pdf".format(slugify(os.path.basename(inputFilePath)))
+writer = PdfWriter(outputFilePath)
 
 pageIdx = -1
-all_the_pages = PdfReader(inpfn).pages
+all_the_pages = PdfReader(inputFilePath).pages
 for page in all_the_pages:
   pageIdx += 1
   if pageIdx == 0 and args.skip_first:
     print('skip first')
+    writer.addpage(page)
     continue
   if pageIdx == len(all_the_pages) and args.skip_last:
     print('skip last')
+    writer.addpage(page)
     continue
   if args.only_pages and not str(pageIdx) in args.only_pages:
     print('skipping {}'.format(pageIdx))
+    writer.addpage(page)
     continue
   writer.addpages(splitpage(page))
 writer.write()
